@@ -8,20 +8,20 @@
 #define __FUNCT__ "main"
 int main(int argc, char **args)
 {
-	Vec				 u, b ;		     // Numerical solution, RHS
-	Mat				 A;		     // Coefficient Matrix
-	KSP				 ksp;                // Linear solver context 
-	PC				 pc;                 // Preconditioner context 
-	PetscReal		 norm, normb;                // To get relative residue
+	Vec		 u, b ;		     // Numerical solution, RHS
+	Mat		 A;		     // Coefficient Matrix
+	KSP		 ksp;                // Linear solver context 
+	PC		 pc;                 // Preconditioner context 
+	PetscReal	 norm, normb;                // To get relative residue
 	PetscErrorCode	 ierr;
-	PetscInt		 i, j, nloc;  
-	PetscInt		 N = 1600, its, n;	 // Default size of A
+	PetscInt	 i, j, nloc;  
+	PetscInt	 N = 1600, its, n;	 // Default size of A
 	PetscScalar      pi = 4 * atan(1.0);
 	//PetscViewer	 viewer, lab;		         // To print soln vector to text file
 	DMBoundaryType   bx = DM_BOUNDARY_NONE, by = DM_BOUNDARY_NONE;
 	DMDAStencilType  stype = DMDA_STENCIL_STAR;     // five-pt stencil for five-pt laplacian
 
-	PetscInitialize(&argc, &args, (char*)0, 0);
+	PetscInitialize(&argc, &args, (char*)0, 0);     // This also initialized MPI
 	ierr = PetscOptionsGetInt(NULL, "-n", &n, NULL); CHKERRQ(ierr); 
 
 	// Initialize MPI and get number of processes and my number or rank
@@ -128,7 +128,8 @@ int main(int argc, char **args)
 	ierr = DMDAVecRestoreArray(da, b, &array); CHKERRQ(ierr);
 	ierr = VecAssemblyBegin(b); CHKERRQ(ierr);
 	ierr = VecAssemblyEnd(b); CHKERRQ(ierr);
-
+	
+	// Print to standard terminal for debugging purposes
 	//printf("\n rhs vector is: \n");
 	//ierr = VecView(b, PETSC_VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
 
@@ -142,7 +143,7 @@ int main(int argc, char **args)
 	ierr = KSPGetPC(ksp, &pc); CHKERRQ(ierr);  
 	ierr = PCSetType(pc, PCGAMG); CHKERRQ(ierr);       // GAMG Preconditioner
 	ierr = KSPSetTolerances(ksp, 1e-07, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT); CHKERRQ(ierr);
-    ierr = KSPSetFromOptions(ksp); CHKERRQ(ierr);
+        ierr = KSPSetFromOptions(ksp); CHKERRQ(ierr);
 	ierr = PCSetFromOptions(pc); CHKERRQ(ierr);
 
 	//Solve linear system
